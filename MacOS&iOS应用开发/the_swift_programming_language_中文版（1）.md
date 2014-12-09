@@ -1,6 +1,10 @@
-# The Swift Programming Language 中文版
+# The Swift Programming Language 中文版（1）
 
-## 欢迎使用 Swift
+全书gitbook地址：[全书地址](http://numbbbbb.gitbooks.io/-the-swift-programming-language-/content/)
+
+GitHub开源项目地址：[项目地址](https://github.com/numbbbbb/the-swift-programming-language-in-chinese)
+
+## 1. 欢迎使用 Swift
 
 ---
 
@@ -130,7 +134,6 @@ if let name = optionalName {
 switch 支持任意类型的数据和各种比较操作
 
 - 每一个匹配最后不用加 break
-- 每一个 switch 判断中最后要加上一个 default
 
 ```
 let vegetable = "red pepper"
@@ -471,7 +474,215 @@ let sideLength = optionalSquare?.sideLength
 
 ---
 
+使用 enum 创建一个枚举，枚举的每一个元素需要通过 case 来声明
 
+- 枚举中可以包含方法
+- 枚举的类型可以是 Int，浮点数或字符串
+- Int 类型枚举只需要设置第一个原始值
+- 枚举中的 switch 可以不加 default
 
+```
+enum Rank: Int {
+  case Ace = 1
+  case Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten
+  case Jack, Queen, King
+  func simpleDescription() -> String {
+    switch self {
+    case .Ace:
+      return "ace"
+    case .Jack:
+      return "jack"
+    case .Queen:
+      return "queen"
+    case .King:
+      return "king"
+    default:
+      return String(self.rawValue)
+    }
+  }
+}
+let ace = Rank.Ace
+let aceRawValue = ace.rawValue
+```
 
+使用 rawValue 在原始值和枚举值之间进行转换
+
+```
+if let convertedRank = Rank(rawValue: 3) {
+  let threeDescription = convertedRank.simpleDescription()
+}
+```
+
+枚举成员的值是实际值，有两种方法引用枚举中的成员
+
+- 下面给 hearts 赋值是，枚举成员 Suit.Hearts 需要用全名来引用，因为常量没有显式指定类型
+- 在 switch 中，枚举成员可以缩写，因为 self 的值已经知道是一个 suit
+
+```
+enum Suit {
+  case Spades, Hearts, Diamonds, Clubs
+  func simpleDescription() -> {
+    switch self {
+    case .Spades:
+      return "spades"
+    case .Hearts:
+      return "hearts"
+    case .Diamonds:
+      return "diamonds"
+    case .Clubs:
+      return "clubs"
+    }
+  }
+}
+let hearts = Suit.Hearts
+let heartsDescription = hearts.simpleDescription()
+```
+
+使用 struct 创建一个结构体，结构体和类的区别：结构体传值，类是传引用
+
+```
+struct Card {
+  var rank: Rank
+  var suit: Suit
+  func simpleDescription() -> String {
+    return "The \(rank.simpleDescription()) of \(suit.simpleDescripton())"
+  }
+}
+let threeOfSpades = Card(rank: .Three, suit: .Spades)
+let threeOfSpadesDescription = threeOfSimpleDescription()
+```
+
+一个枚举成员的实例可以有实例值
+
+- 相同的枚举成员可以有不同的值，创建实例的时候确定即可
+- 原始值对于所有实例是相同的，实在定义枚举的时候设置的
+
+```
+// 从服务器取日出日落时间，考虑错误情况
+enum ServerResponse {
+  case Result(String,String)
+  case Error(String)
+}
+
+let success = ServerResponse.Result("6:00 am", "8:09 pm")
+let failure = ServerResponse.Error("Out of cheese.")
+
+switch success {
+  case let .Result(sunrise, sunset):
+    let serverResponse = "Sunrise is at \(sunrise) and sunset is at \(sunset)."
+  case let .Error(error):
+    let serverResponse = "Failure... \(error)"
+}
+```
+
+#### 协议和扩展
+
+---
+
+使用 protocol 来声明协议
+
+- 类，枚举和结构体都可以实现协议
+- 声明协议的时候 mutating 关键字用来标记一个会修改结构体的方法
+
+```
+protocol ExampleProtocol {
+  var simpleDescription: String { get }
+  mutating func adjust()
+}
+
+实现协议
+class SimpleClass: ExampleProtocol {
+  var simpleDescription: String = "A very simple class."
+  var anotherProperty: Int = 69015
+  func adjust() {
+    simpleDescription += " Now 100% adjusted."
+  }
+} 
+var a = SimpleClass()
+a.adjust()
+let aDescription = a.simpleDescription
+
+struct SimpleStructure: ExampleProtocol {
+  var simpleDescription: String = "A simple structure"
+  mutating func adjust() {
+    simpleDescription += " (adjusted)"
+  }
+}
+var b = SimpleStructure()
+b.adjust()
+let bDescription = b.simpleDescription
+```
+
+使用 extension 为现有的类型添加功能（新的方法和参数），可以从外部框架引入一个类型，是这个类型遵循某个协议
+
+```
+extension Int: ExampleProtocol {
+  var simpleDescription: String {
+    return "The number \(self)"
+  }
+  mumating func adjust() {
+    self += 42
+  }
+}
+7.simpleDescription
+```
+
+可以像使用其他命名类型一样使用协议名，但是处理类型是协议的值时，协议外定义的方法不可用
+
+```
+// protocolValue 的类型是 simpleClass，但编译器把它当做 ExampleProtocol，所以不能调用在它之外实现的方法或属性
+let protocolValue: ExampleProtocol = a
+protocolValue.simpleDescription
+protocolValue.anotherProperty  //报错，无法正常运行
+```
+
+#### 泛型
+
+---
+
+在尖括号里写一个名字来创建一个泛型函数或类型
+
+```
+func repeat<ItemType>(item: ItemType, times: Int) -> [ItemType] {
+  var result = [ItemType]()
+  for i in 0..<times {
+    result.append(item)
+  }
+  return result
+}
+repeat("knock", 4)
+```
+
+也可以创建泛型类，枚举，结构体
+
+```
+enum OptionalValue<T> {
+  case None
+  case Some(T)
+}
+var possibleInteger: OptionalValue<Int> = .None
+possibleInteger = .Some(100)
+```
+
+在类名后面使用 where 来指定对类型的需求
+
+- where 可以省略，只在冒号后面写协议或者类名
+- `<T: Equatable>` 和 `<T where T: Equatable>` 是等价的
+
+```
+func anyCommonElements <T, U where T: SequenceType, U: SequenceType, T.Generator.Element: Equatable, T.Generator.Element == U.Generator.Element> (lhs: T, rhs: U) -> Bool {
+  for lhsItem in lhs {
+    for rhsItem in rhs {
+      if lhsItem == rhsItem {
+        return true
+      }
+    }
+  }
+  return false
+}
+```
+
+---
+
+### 1.3 Swift版本历史记录
 
